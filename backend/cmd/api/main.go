@@ -77,6 +77,7 @@ func main() {
 		// items
 		r.Get("/items", itemHandler.GetAll)
 		r.Get("/items/{id}", itemHandler.GetByID)
+		r.Get("/items/{id}/borrows", itemHandler.GetBorrowHistory)
 
 		// borrow requests
 		r.Get("/borrow-requests", borrowHandler.GetAll)

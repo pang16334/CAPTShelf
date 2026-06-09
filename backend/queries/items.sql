@@ -98,3 +98,17 @@ RETURNING *;
 
 -- name: DeleteItem :exec
 DELETE FROM items WHERE id = $1;
+
+-- name: GetItemBorrowHistory :many
+SELECT
+    br.id,
+    br.borrower_name,
+    br.borrower_telegram_id,
+    br.status,
+    br.borrowed_at,
+    br.expected_return_at,
+    bri.quantity
+FROM borrow_requests br
+JOIN borrow_request_items bri ON bri.borrow_request_id = br.id
+WHERE bri.item_id = $1
+ORDER BY br.borrowed_at DESC;

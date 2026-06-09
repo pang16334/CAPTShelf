@@ -9,7 +9,15 @@ import BorrowPage from './pages/BorrowPage'
 import ReturnPage from './pages/ReturnPage'
 import Layout from './components/Layout'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,  // data stays fresh for 5 minutes
+      gcTime: 1000 * 60 * 10,    // cache kept for 10 minutes
+      retry: 1,                   // retry once on failure
+    }
+  }
+})
 
 export default function App() {
   return (

@@ -128,6 +128,59 @@ func (q *Queries) GetAllItems(ctx context.Context) ([]GetAllItemsRow, error) {
 	return items, nil
 }
 
+const getItemBorrowHistory = `-- name: GetItemBorrowHistory :many
+SELECT
+    br.id,
+    br.borrower_name,
+    br.borrower_telegram_id,
+    br.status,
+    br.borrowed_at,
+    br.expected_return_at,
+    bri.quantity
+FROM borrow_requests br
+JOIN borrow_request_items bri ON bri.borrow_request_id = br.id
+WHERE bri.item_id = $1
+ORDER BY br.borrowed_at DESC
+`
+
+type GetItemBorrowHistoryRow struct {
+	ID                 int32              `json:"id"`
+	BorrowerName       string             `json:"borrower_name"`
+	BorrowerTelegramID int64              `json:"borrower_telegram_id"`
+	Status             string             `json:"status"`
+	BorrowedAt         pgtype.Timestamptz `json:"borrowed_at"`
+	ExpectedReturnAt   pgtype.Date        `json:"expected_return_at"`
+	Quantity           int32              `json:"quantity"`
+}
+
+func (q *Queries) GetItemBorrowHistory(ctx context.Context, itemID int32) ([]GetItemBorrowHistoryRow, error) {
+	rows, err := q.db.Query(ctx, getItemBorrowHistory, itemID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetItemBorrowHistoryRow
+	for rows.Next() {
+		var i GetItemBorrowHistoryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.BorrowerName,
+			&i.BorrowerTelegramID,
+			&i.Status,
+			&i.BorrowedAt,
+			&i.ExpectedReturnAt,
+			&i.Quantity,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getItemByID = `-- name: GetItemByID :one
 SELECT 
     i.id,

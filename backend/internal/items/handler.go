@@ -123,3 +123,25 @@ func (h *Handler) Import(w http.ResponseWriter, r *http.Request) {
 	// placeholder — we'll implement Excel import later
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
+
+func (h *Handler) GetBorrowHistory(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	history, err := h.queries.GetItemBorrowHistory(r.Context(), int32(id))
+	if err != nil {
+		http.Error(w, "failed to fetch borrow history", http.StatusInternalServerError)
+		return
+	}
+
+	// return empty array instead of null
+	if history == nil {
+		history = []db.GetItemBorrowHistoryRow{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(history)
+}
