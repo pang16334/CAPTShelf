@@ -8,6 +8,7 @@ import ItemDetailPage from './pages/ItemDetailPage'
 import BorrowPage from './pages/BorrowPage'
 import ReturnPage from './pages/ReturnPage'
 import Layout from './components/Layout'
+import CommitteeInventoryPage from './pages/CommitteeInventoryPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Navigate to="/inventory" replace />} />
             <Route path="inventory" element={<InventoryPage />} />
+            <Route path="inventory/committees/:id" element={<CommitteeInventoryPage />} />
             <Route path="items/:id" element={<ItemDetailPage />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="action" element={<ActionPage />} />

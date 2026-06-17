@@ -1,16 +1,25 @@
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getItems, getCommittees } from '../api'
 import type { Item, Committee } from '../types'
+import { useCartStore } from '../store/cartStore'
+import Toast from '../components/Toast'
 
 export default function InventoryPage() {
   const navigate = useNavigate()
-  const [view, setView] = useState<'all' | 'committee'>('all')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const view = (searchParams.get('view') as 'all' | 'committee') ?? 'all'
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedCommittee, setSelectedCommittee] = useState('')
   const [quantities, setQuantities] = useState<Record<number, number>>({})
+  const { addItem, committeeId } = useCartStore()
+  const [toast, setToast] = useState({ show: false, message: '' })
+
+  const setView = (v: 'all' | 'committee') => {
+      setSearchParams(v === 'committee' ? { view: 'committee' } : {})
+  }
 
   // fetch all once, cached by React Query
   const { data: items = [], isLoading: itemsLoading } = useQuery({
@@ -49,6 +58,18 @@ export default function InventoryPage() {
       [id]: Math.min(max, Math.max(1, (prev[id] ?? 1) + delta))
     }))
   }
+
+  const handleAddToCart = (item: Item, qty: number) => {
+  const success = addItem(item, qty)
+  if (success) {
+    setToast({ show: true, message: `${item.name} added to cart` })
+  } else {
+    setToast({ 
+      show: true, 
+      message: `Cart is locked to ${committees.find(c => c.id === committeeId)?.name}. Submit first.`
+    })
+  }
+}
 
   if (itemsLoading) {
     return (
@@ -198,13 +219,21 @@ export default function InventoryPage() {
                           </button>
                         </div>
                         <button
-                          onClick={() => navigate(
-                            `/action/borrow?itemId=${item.id}&qty=${getQty(item.id)}&available=${available(item)}`
-                          )}
-                          className="bg-primary-container text-on-primary-container text-sm font-semibold px-4 py-2 rounded-full active:scale-95 transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation()  // prevent navigating to item detail
+                          handleAddToCart(item, getQty(item.id))
+                        }}
+                        className="bg-primary-container text-on-primary-container text-sm font-semibold px-4 py-2 rounded-full active:scale-95 transition-all"
                         >
                           + Borrow
                         </button>
+
+                        <Toast
+                          message={toast.message}
+                          show={toast.show}
+                          onHide={() => setToast(t => ({ ...t, show: false }))}
+                        />
+                        
                       </div>
                     ) : (
                       <p className="text-xs text-error mt-2 font-semibold">
