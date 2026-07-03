@@ -6,7 +6,6 @@ CAPTShelf replaces manual spreadsheet tracking with a fast, transparent system f
 
 **Target:** Borrowing a set of items takes under 15 seconds.
 
----
 
 ## Features
 
@@ -19,7 +18,6 @@ CAPTShelf replaces manual spreadsheet tracking with a fast, transparent system f
 - 📥 Bulk inventory import via Excel
 - 📱 Works in Telegram and browser
 
----
 
 ## Tech Stack
 
@@ -33,7 +31,6 @@ CAPTShelf replaces manual spreadsheet tracking with a fast, transparent system f
 | State | Zustand (cart) + TanStack Query (server data) |
 | Auth | Telegram Mini App initData (HMAC validation) |
 
----
 
 ## Monorepo Structure
 
@@ -50,7 +47,6 @@ Each service has its own README with setup instructions:
 - [Backend README](./backend/README.md)
 - [Frontend README](./frontend/README.md)
 
----
 
 ## Quick Start
 
@@ -91,7 +87,6 @@ Open `http://localhost:5173` — you'll see CAPTShelf running in browser mode.
 
 > **DEV_MODE=true** is set by default — skips Telegram auth and injects a fake super admin so you can test everything in the browser without needing Telegram.
 
----
 
 ## Environment Variables
 
@@ -113,7 +108,6 @@ PORT=8080
 | `DEV_TELEGRAM_ID` | Fake Telegram user ID used in dev mode |
 | `PORT` | Backend port (default 8080) |
 
----
 
 ## Contributing
 
@@ -146,14 +140,6 @@ chore: update dependencies
 - [ ] Frontend compiles with `npm run build`
 - [ ] No TypeScript errors
 - [ ] Tested in browser (DEV_MODE=true)
-
----
-
-## Team
-
-Built by Yi Jie ([@pang16334](https://github.com/pang16334)) for CAPT SAC Tech Committee · NUS AY25/26
-
----
 
 ## License
 
