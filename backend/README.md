@@ -2,8 +2,6 @@
 
 Go REST API for CAPTShelf. Handles inventory, borrowing, auth, and file storage.
 
----
-
 ## Tech Stack
 
 | Tool | Purpose |
@@ -13,8 +11,6 @@ Go REST API for CAPTShelf. Handles inventory, borrowing, auth, and file storage.
 | sqlc | Type-safe SQL query generation |
 | godotenv | Load `.env` file |
 | Cloudflare R2 | Photo storage (S3-compatible) |
-
----
 
 ## Folder Structure
 
@@ -67,8 +63,6 @@ backend/
 └── sqlc.yaml                    ← sqlc configuration
 ```
 
----
-
 ## Setup
 
 ### 1. Prerequisites
@@ -116,8 +110,6 @@ go run cmd/api/main.go
 # API running on http://localhost:8080
 ```
 
----
-
 ## API Endpoints
 
 ### Public (auth required)
@@ -144,8 +136,6 @@ GET    /admin/users                  list all users
 PUT    /admin/users/:id/role         update user role + committee
 ```
 
----
-
 ## Auth
 
 All endpoints require a valid `X-Telegram-Init-Data` header containing the Telegram Mini App `initData` string. The middleware validates the HMAC signature using your `BOT_TOKEN`.
@@ -156,8 +146,6 @@ All endpoints require a valid `X-Telegram-Init-Data` header containing the Teleg
 Header: X-Telegram-Init-Data: <initData string from Telegram>
 ```
 
----
-
 ## Regenerating sqlc
 
 If you modify any SQL files in `queries/`, regenerate the Go code:
@@ -167,8 +155,6 @@ sqlc generate
 ```
 
 > Never manually edit files in `internal/db/` — they are auto-generated.
-
----
 
 ## Adding a New Endpoint
 
@@ -191,8 +177,6 @@ func (h *Handler) GetHistory(w http.ResponseWriter, r *http.Request) { ... }
 // 4. cmd/api/main.go — add route
 r.Get("/items/{id}/history", itemHandler.GetHistory)
 ```
-
----
 
 ## User Roles
 
