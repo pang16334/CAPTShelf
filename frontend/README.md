@@ -2,7 +2,6 @@
 
 React + Vite + TypeScript frontend for CAPTShelf. Runs in browser for development and as a Telegram Mini App in production.
 
----
 
 ## Tech Stack
 
@@ -15,8 +14,6 @@ React + Vite + TypeScript frontend for CAPTShelf. Runs in browser for developmen
 | Zustand | Client state (cart) |
 | Axios | HTTP requests |
 | React Router v6 | Page routing |
-
----
 
 ## Folder Structure
 
@@ -57,8 +54,6 @@ frontend/
 └── package.json
 ```
 
----
-
 ## Setup
 
 ### 1. Prerequisites
@@ -80,8 +75,6 @@ npm run dev
 ```bash
 npm run build
 ```
-
----
 
 ## Key Concepts
 
@@ -161,8 +154,6 @@ bg-error-container      light red (error states)
 text-error              red (error text)
 ```
 
----
-
 ## Adding a New Page
 
 1. Create `src/pages/YourPage.tsx`
@@ -175,8 +166,6 @@ import YourPage from './pages/YourPage'
 
 <Route path="your-path" element={<YourPage />} />
 ```
-
----
 
 ## Cart Flow
 
@@ -201,8 +190,6 @@ Submit → clearCart() + invalidate cache + navigate to history
 
 **Committee locking:** once the first item is added to the cart, the committee is locked. Items from other committees cannot be added — a warning is shown instead.
 
----
-
 ## Telegram Integration (Production Only)
 
 In production, the app runs as a Telegram Mini App. The frontend sends the Telegram `initData` with every request:
@@ -218,8 +205,6 @@ client.interceptors.request.use((config) => {
 ```
 
 For local development, `DEV_MODE=true` on the backend skips this check entirely.
-
----
 
 ## Environment
 
@@ -240,8 +225,6 @@ And set in `.env`:
 ```
 VITE_API_URL=https://your-backend-url.com
 ```
-
----
 
 ## Common Patterns
 
