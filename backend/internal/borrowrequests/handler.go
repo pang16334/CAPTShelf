@@ -2,6 +2,7 @@ package borrowrequests
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -31,6 +32,9 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "failed to fetch borrow requests", http.StatusInternalServerError)
 			return
 		}
+		if requests == nil {
+			requests = []db.BorrowRequest{}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(requests)
 		return
@@ -48,16 +52,36 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "failed to fetch borrow requests", http.StatusInternalServerError)
 			return
 		}
+		if requests == nil {
+			requests = []db.BorrowRequest{}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(requests)
 		return
 	}
 
-	// everyone sees everything
-	requests, err := h.queries.GetAllBorrowRequests(r.Context())
+	// everyone sees everything — use with-items for full data
+	requests, err := h.queries.GetAllBorrowRequestsWithItems(r.Context())
 	if err != nil {
 		http.Error(w, "failed to fetch borrow requests", http.StatusInternalServerError)
 		return
+	}
+	if requests == nil {
+		requests = []db.GetAllBorrowRequestsWithItemsRow{}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(requests)
+}
+
+// GetAllWithItems — dedicated endpoint for history + return pages
+func (h *Handler) GetAllWithItems(w http.ResponseWriter, r *http.Request) {
+	requests, err := h.queries.GetAllBorrowRequestsWithItems(r.Context())
+	if err != nil {
+		http.Error(w, "failed to fetch borrow requests", http.StatusInternalServerError)
+		return
+	}
+	if requests == nil {
+		requests = []db.GetAllBorrowRequestsWithItemsRow{}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(requests)
@@ -96,7 +120,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		BorrowerName     string `json:"borrower_name"`
 		CommitteeID      int32  `json:"committee_id"`
 		BorrowPhotoUrl   string `json:"borrow_photo_url"`
-		ExpectedReturnAt string `json:"expected_return_at"` // receive as string "2025-06-30"
+		ExpectedReturnAt string `json:"expected_return_at"`
 		Remarks          string `json:"remarks"`
 		Items            []struct {
 			ItemID   int32 `json:"item_id"`
@@ -109,14 +133,12 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// parse date using helper
 	expectedReturnAt, err := helpers.ParseDate(body.ExpectedReturnAt)
 	if err != nil {
 		http.Error(w, "invalid date format, use YYYY-MM-DD", http.StatusBadRequest)
 		return
 	}
 
-	// create borrow request
 	request, err := h.queries.CreateBorrowRequest(r.Context(), db.CreateBorrowRequestParams{
 		BorrowerName:       body.BorrowerName,
 		BorrowerTelegramID: user.TelegramID,
@@ -126,11 +148,11 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		Remarks:            helpers.NullText(body.Remarks),
 	})
 	if err != nil {
+		log.Printf("CreateBorrowRequest error: %v", err)
 		http.Error(w, "failed to create borrow request", http.StatusInternalServerError)
 		return
 	}
 
-	// create borrow request items
 	for _, item := range body.Items {
 		_, err := h.queries.CreateBorrowRequestItem(r.Context(), db.CreateBorrowRequestItemParams{
 			BorrowRequestID: request.ID,
@@ -165,7 +187,7 @@ func (h *Handler) Return(w http.ResponseWriter, r *http.Request) {
 
 	request, err := h.queries.ReturnBorrowRequest(r.Context(), db.ReturnBorrowRequestParams{
 		ID:             int32(id),
-		ReturnPhotoUrl: body.ReturnPhotoUrl,
+		ReturnPhotoUrl: helpers.NullText(body.ReturnPhotoUrl),
 	})
 	if err != nil {
 		http.Error(w, "failed to return borrow request", http.StatusInternalServerError)
@@ -185,14 +207,12 @@ func (h *Handler) Cancel(w http.ResponseWriter, r *http.Request) {
 
 	user := middleware.GetUser(r)
 
-	// fetch the request first to check permissions
 	request, err := h.queries.GetBorrowRequestByID(r.Context(), int32(id))
 	if err != nil {
 		http.Error(w, "borrow request not found", http.StatusNotFound)
 		return
 	}
 
-	// permission check
 	switch user.Role {
 	case "user":
 		if request.BorrowerTelegramID != user.TelegramID {
@@ -205,7 +225,6 @@ func (h *Handler) Cancel(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// super_admin can cancel anything, no check needed
 
 	cancelled, err := h.queries.CancelBorrowRequest(r.Context(), int32(id))
 	if err != nil {

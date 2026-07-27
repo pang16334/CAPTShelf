@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -107,42 +108,63 @@ func (q *Queries) CreateBorrowRequestItem(ctx context.Context, arg CreateBorrowR
 	return i, err
 }
 
-const getAllBorrowRequests = `-- name: GetAllBorrowRequests :many
-SELECT
+const getAllBorrowRequestsWithItems = `-- name: GetAllBorrowRequestsWithItems :many
+SELECT 
     br.id,
     br.borrower_name,
-    br.borrower_telegram_id,
     br.committee_id,
+    br.status,
+    br.borrowed_at,
+    br.expected_return_at,
     br.borrow_photo_url,
     br.return_photo_url,
-    br.expected_return_at,
     br.remarks,
-    br.status,
-    br.borrowed_at
+    json_agg(json_build_object(
+        'item_id', bri.item_id,
+        'quantity', bri.quantity,
+        'item_name', i.name,
+        'variant', i.variant
+    )) as items
 FROM borrow_requests br
+LEFT JOIN borrow_request_items bri ON bri.borrow_request_id = br.id
+LEFT JOIN items i ON i.id = bri.item_id
+GROUP BY br.id
 ORDER BY br.borrowed_at DESC
 `
 
-func (q *Queries) GetAllBorrowRequests(ctx context.Context) ([]BorrowRequest, error) {
-	rows, err := q.db.Query(ctx, getAllBorrowRequests)
+type GetAllBorrowRequestsWithItemsRow struct {
+	ID               int32              `json:"id"`
+	BorrowerName     string             `json:"borrower_name"`
+	CommitteeID      int32              `json:"committee_id"`
+	Status           string             `json:"status"`
+	BorrowedAt       pgtype.Timestamptz `json:"borrowed_at"`
+	ExpectedReturnAt pgtype.Date        `json:"expected_return_at"`
+	BorrowPhotoUrl   string             `json:"borrow_photo_url"`
+	ReturnPhotoUrl   pgtype.Text        `json:"return_photo_url"`
+	Remarks          pgtype.Text        `json:"remarks"`
+	Items            json.RawMessage    `json:"items"`
+}
+
+func (q *Queries) GetAllBorrowRequestsWithItems(ctx context.Context) ([]GetAllBorrowRequestsWithItemsRow, error) {
+	rows, err := q.db.Query(ctx, getAllBorrowRequestsWithItems)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []BorrowRequest
+	var items []GetAllBorrowRequestsWithItemsRow
 	for rows.Next() {
-		var i BorrowRequest
+		var i GetAllBorrowRequestsWithItemsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.BorrowerName,
-			&i.BorrowerTelegramID,
 			&i.CommitteeID,
-			&i.BorrowPhotoUrl,
-			&i.ReturnPhotoUrl,
-			&i.ExpectedReturnAt,
-			&i.Remarks,
 			&i.Status,
 			&i.BorrowedAt,
+			&i.ExpectedReturnAt,
+			&i.BorrowPhotoUrl,
+			&i.ReturnPhotoUrl,
+			&i.Remarks,
+			&i.Items,
 		); err != nil {
 			return nil, err
 		}
@@ -376,8 +398,8 @@ RETURNING id, borrower_name, borrower_telegram_id, committee_id, borrow_photo_ur
 `
 
 type ReturnBorrowRequestParams struct {
-	ID             int32  `json:"id"`
-	ReturnPhotoUrl string `json:"return_photo_url"`
+	ID             int32       `json:"id"`
+	ReturnPhotoUrl pgtype.Text `json:"return_photo_url"`
 }
 
 func (q *Queries) ReturnBorrowRequest(ctx context.Context, arg ReturnBorrowRequestParams) (BorrowRequest, error) {

@@ -80,6 +80,7 @@ func main() {
 		r.Get("/items/{id}/borrows", itemHandler.GetBorrowHistory)
 
 		// borrow requests
+		r.Get("/borrow-requests/with-items", borrowHandler.GetAllWithItems)
 		r.Get("/borrow-requests", borrowHandler.GetAll)
 		r.Get("/borrow-requests/{id}", borrowHandler.GetByID)
 		r.Post("/borrow-requests", borrowHandler.Create)

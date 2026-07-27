@@ -79,7 +79,7 @@ RETURNING *;
 -- name: UpsertItem :one
 INSERT INTO items (name, category, variant, committee_id, total_quantity, description)
 VALUES ($1, $2, $3, $4, $5, $6)
-ON CONFLICT (name, variant, committee_id) DO UPDATE
+ON CONFLICT (name, COALESCE(variant, ''), committee_id) DO UPDATE
 SET total_quantity = EXCLUDED.total_quantity,
     description = EXCLUDED.description,
     updated_at = NOW()
@@ -90,11 +90,12 @@ UPDATE items
 SET name = $2,
     category = $3,
     variant = $4,
-    total_quantity = $5,
-    description = $6,
+    committee_id = $5,
+    total_quantity = $6,
+    description = $7,
     updated_at = NOW()
 WHERE id = $1
-RETURNING *;
+RETURNING id, name, category, variant, committee_id, total_quantity, description, created_at, updated_at;
 
 -- name: DeleteItem :exec
 DELETE FROM items WHERE id = $1;

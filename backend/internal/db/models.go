@@ -14,7 +14,7 @@ type BorrowRequest struct {
 	BorrowerTelegramID int64              `json:"borrower_telegram_id"`
 	CommitteeID        int32              `json:"committee_id"`
 	BorrowPhotoUrl     string             `json:"borrow_photo_url"`
-	ReturnPhotoUrl     string             `json:"return_photo_url"`
+	ReturnPhotoUrl     pgtype.Text        `json:"return_photo_url"`
 	ExpectedReturnAt   pgtype.Date        `json:"expected_return_at"`
 	Remarks            pgtype.Text        `json:"remarks"`
 	Status             string             `json:"status"`

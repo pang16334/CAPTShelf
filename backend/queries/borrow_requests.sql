@@ -9,19 +9,27 @@ INSERT INTO borrow_requests (
 ) VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
--- name: GetAllBorrowRequests :many
-SELECT
+-- name: GetAllBorrowRequestsWithItems :many
+SELECT 
     br.id,
     br.borrower_name,
-    br.borrower_telegram_id,
     br.committee_id,
+    br.status,
+    br.borrowed_at,
+    br.expected_return_at,
     br.borrow_photo_url,
     br.return_photo_url,
-    br.expected_return_at,
     br.remarks,
-    br.status,
-    br.borrowed_at
+    json_agg(json_build_object(
+        'item_id', bri.item_id,
+        'quantity', bri.quantity,
+        'item_name', i.name,
+        'variant', i.variant
+    )) as items
 FROM borrow_requests br
+LEFT JOIN borrow_request_items bri ON bri.borrow_request_id = br.id
+LEFT JOIN items i ON i.id = bri.item_id
+GROUP BY br.id
 ORDER BY br.borrowed_at DESC;
 
 -- name: GetBorrowRequestsByCommittee :many

@@ -139,6 +139,8 @@ func parseInitData(initData string) (int64, string, string, error) {
 func findOrCreateUser(ctx context.Context, db *pgxpool.Pool, telegramID int64, name, username string) (*User, error) {
 	user := &User{}
 
+	superAdminID, _ := strconv.ParseInt(os.Getenv("SUPER_ADMIN_TELEGRAM_ID"), 10, 64)
+
 	err := db.QueryRow(ctx, `
 		SELECT id, telegram_id, name, username, role, committee_id
 		FROM users
@@ -146,13 +148,35 @@ func findOrCreateUser(ctx context.Context, db *pgxpool.Pool, telegramID int64, n
 	`, telegramID).Scan(&user.ID, &user.TelegramID, &user.Name, &user.Username, &user.Role, &user.CommitteeID)
 
 	if err != nil {
-		// user doesn't exist, create them
+		// user doesn't exist — create them
+		role := "user"
+		if telegramID == superAdminID {
+			role = "super_admin"
+		}
+
 		err = db.QueryRow(ctx, `
 			INSERT INTO users (telegram_id, name, username, role)
-			VALUES ($1, $2, $3, 'user')
+			VALUES ($1, $2, $3, $4)
 			RETURNING id, telegram_id, name, username, role, committee_id
-		`, telegramID, name, username).Scan(&user.ID, &user.TelegramID, &user.Name, &user.Username, &user.Role, &user.CommitteeID)
+		`, telegramID, name, username, role).Scan(
+			&user.ID, &user.TelegramID, &user.Name,
+			&user.Username, &user.Role, &user.CommitteeID,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
 
+	// always restore super admin role if accidentally demoted
+	if telegramID == superAdminID && user.Role != "super_admin" {
+		err = db.QueryRow(ctx, `
+			UPDATE users SET role = 'super_admin'
+			WHERE telegram_id = $1
+			RETURNING id, telegram_id, name, username, role, committee_id
+		`, telegramID).Scan(
+			&user.ID, &user.TelegramID, &user.Name,
+			&user.Username, &user.Role, &user.CommitteeID,
+		)
 		if err != nil {
 			return nil, err
 		}
