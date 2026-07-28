@@ -176,9 +176,9 @@ export default function InventoryPage() {
                         <div>
                           <p className="font-semibold text-on-surface">
                             {item.name}
-                            {item.variant?.string && (
+                            {item.variant && (
                               <span className="text-on-surface-variant font-normal">
-                                {' '}· {item.variant.string}
+                                {' '}· {item.variant}
                               </span>
                             )}
                           </p>
@@ -227,13 +227,6 @@ export default function InventoryPage() {
                         >
                           + Borrow
                         </button>
-
-                        <Toast
-                          message={toast.message}
-                          show={toast.show}
-                          onHide={() => setToast(t => ({ ...t, show: false }))}
-                        />
-                        
                       </div>
                     ) : (
                       <p className="text-xs text-error mt-2 font-semibold">
@@ -266,6 +259,12 @@ export default function InventoryPage() {
           </div>
         )}
       </div>
+      <Toast
+        message={toast.message}
+        show={toast.show}
+        onHide={() => setToast(t => ({ ...t, show: false }))}
+      />
+
     </div>
   )
 }

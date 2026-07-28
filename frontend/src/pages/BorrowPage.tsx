@@ -118,8 +118,7 @@ export default function BorrowPage() {
     onSuccess: () => {
       clearCart()  // clear global cart after successful submit
       queryClient.invalidateQueries({ queryKey: ['items'] })
-      queryClient.invalidateQueries({ queryKey: ['borrow-requests'] })
-      navigate('/history')
+      queryClient.invalidateQueries({ queryKey: ['borrow-requests-with-items'] })
     },
     onError: () => {
       setError('Failed to submit borrow request. Please try again.')
@@ -243,9 +242,9 @@ export default function BorrowPage() {
                   >
                     <p className="text-sm font-semibold text-on-surface">
                       {item.name}
-                      {item.variant?.string && (
+                      {item.variant && (
                         <span className="font-normal text-on-surface-variant">
-                          {' '}· {item.variant.string}
+                          {' '}· {item.variant}
                         </span>
                       )}
                     </p>
@@ -280,9 +279,9 @@ export default function BorrowPage() {
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-on-surface">
                       {item.name}
-                      {item.variant?.string && (
+                      {item.variant && (
                         <span className="font-normal text-on-surface-variant">
-                          {' '}· {item.variant.string}
+                          {' '}· {item.variant}
                         </span>
                       )}
                     </p>

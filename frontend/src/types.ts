@@ -8,11 +8,11 @@ export interface Item {
   id: number
   name: string
   category: string
-  variant: { string: string; valid: boolean } | null
+  variant: string | null
   committee_id: number
   total_quantity: number
   borrowed_quantity: number
-  description: { string: string; valid: boolean } | null
+  description: string | null
   created_at: string
   updated_at: string
 }
@@ -33,7 +33,7 @@ export interface BorrowRequest {
   borrower_telegram_id: number
   committee_id: number
   borrow_photo_url: string
-  return_photo_url: string
+  return_photo_url: string | null
   expected_return_at: string
   remarks: { string: string; valid: boolean } | null
   status: string
@@ -56,4 +56,24 @@ export interface User {
   role: string
   committee_id: { int32: number; valid: boolean } | null
   created_at: string
+}
+
+export interface BorrowedItem {
+  item_id: number
+  quantity: number
+  item_name: string
+  variant: string | null
+}
+
+export interface BorrowRequestWithItems {
+  id: number
+  borrower_name: string
+  committee_id: number
+  status: string
+  borrowed_at: string
+  expected_return_at: string
+  borrow_photo_url: string
+  return_photo_url: string | null
+  remarks: { string: string; valid: boolean } | null
+  items: BorrowedItem[]
 }

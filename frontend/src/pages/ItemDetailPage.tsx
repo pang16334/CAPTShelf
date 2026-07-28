@@ -3,11 +3,15 @@ import { useQuery } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
 import { getItems, getCommittees, getItemBorrowHistory } from '../api'
 import type { Item, Committee, ItemBorrowHistoryRow } from '../types'
+import { useCartStore } from '../store/cartStore'
+import Toast from '../components/Toast'
 
 export default function ItemDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [quantity, setQuantity] = useState(1)
+  const { addItem } = useCartStore()
+  const [toast, setToast] = useState({ show: false, message: '' })
 
   // all from cache — no extra network requests
   const { data: items = [] } = useQuery({
@@ -47,6 +51,15 @@ export default function ItemDetailPage() {
     )
   }
 
+  const handleAddToCart = () => {
+    const success = addItem(item, quantity)
+    if (success) {
+      setToast({ show: true, message: `${item.name} added to cart 🛒` })
+    } else {
+      setToast({ show: true, message: 'Cart locked to different committee. Submit first.' })
+    }
+  }
+
   return (
     <div className="flex flex-col">
       {/* header */}
@@ -67,18 +80,18 @@ export default function ItemDetailPage() {
             <div>
               <h2 className="text-xl font-bold text-on-surface">
                 {item.name}
-                {item.variant?.string && (
+                {item.variant && (
                   <span className="text-on-surface-variant font-normal">
-                    {' '}· {item.variant.string}
+                    {' '}· {item.variant}
                   </span>
                 )}
               </h2>
               <p className="text-sm text-on-surface-variant mt-1">
                 {item.category} · {committee?.name}
               </p>
-              {item.description?.string && (
+              {item.description && (
                 <p className="text-sm text-on-surface mt-2">
-                  {item.description.string}
+                  {item.description}
                 </p>
               )}
             </div>
@@ -126,9 +139,7 @@ export default function ItemDetailPage() {
                 </button>
               </div>
               <button
-                onClick={() => navigate(
-                  `/action/borrow?itemId=${item.id}&qty=${quantity}&available=${available}`
-                )}
+                onClick={handleAddToCart}
                 className="bg-primary-container text-on-primary-container font-semibold px-6 py-2.5 rounded-full active:scale-95 transition-all"
               >
                 Borrow This Item
@@ -193,6 +204,11 @@ export default function ItemDetailPage() {
           )}
         </div>
       </div>
+      <Toast
+        message={toast.message}
+        show={toast.show}
+        onHide={() => setToast(t => ({ ...t, show: false }))}
+      />
     </div>
   )
 }
