@@ -1,4 +1,4 @@
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id                SERIAL PRIMARY KEY,
     telegram_id       BIGINT UNIQUE NOT NULL,
     name              TEXT NOT NULL,
