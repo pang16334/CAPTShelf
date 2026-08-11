@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { isAxiosError } from 'axios'
 import { getItems, getCommittees, getUsers, updateUserRole, createItem, updateItem, deleteItem, importItems } from '../api'
 import type { Item, Committee, User } from '../types'
 
@@ -178,8 +179,11 @@ export default function AdminPage() {
         setImportResult(result)
         queryClient.invalidateQueries({ queryKey: ['items'] })
         showFeedback(`Imported ${result.imported} items successfully`)
-    } catch {
-        showFeedback('Failed to import file', true)
+    } catch (err) {
+        const message = isAxiosError(err) && typeof err.response?.data === 'string'
+            ? err.response.data
+            : 'Failed to import file'
+        showFeedback(message, true)
     } finally {
         setImporting(false)
         e.target.value = '' // reset file input
