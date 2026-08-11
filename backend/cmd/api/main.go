@@ -61,6 +61,11 @@ func main() {
 		})
 	})
 
+	// health check
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("ok"))
+	})
+
 	// auth middleware
 	authMiddleware := middleware.Auth(pool)
 
