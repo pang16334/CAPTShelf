@@ -36,6 +36,9 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "failed to fetch items", http.StatusInternalServerError)
 			return
 		}
+		if items == nil {
+			items = []db.GetItemsByCommitteeRow{}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(items)
 		return

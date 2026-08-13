@@ -21,6 +21,9 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to fetch committees", http.StatusInternalServerError)
 		return
 	}
+	if committees == nil {
+		committees = []db.Committee{}
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(committees)
